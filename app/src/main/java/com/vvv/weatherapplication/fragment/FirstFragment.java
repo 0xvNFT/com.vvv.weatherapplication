@@ -161,7 +161,7 @@ public class FirstFragment extends Fragment {
                         cityName = city;
                     } else {
                         Log.d("TAG", "CITY NOT FOUND");
-                        Toast.makeText(requireContext(), "User city not found..", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(requireContext(), "User city not found..", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
