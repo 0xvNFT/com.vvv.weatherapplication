@@ -4,9 +4,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -69,6 +72,11 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
 
+        if (!isGooglePlayServicesAvailable()) {
+            Toast.makeText(requireContext(), "Google Play Services is not available on this device.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
 
         LatLng hanoiLocation = new LatLng(21.0285, 105.8542);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(hanoiLocation, 10f));
@@ -76,16 +84,18 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
         LatLng hanoiLocations = new LatLng(21.0285, 105.8542);
         googleMap.addMarker(new MarkerOptions().position(hanoiLocations).title("Hanoi"));
 
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        builder.include(hanoiLocations);
-        LatLngBounds bounds = builder.build();
-        int padding = 100;
-        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-        googleMap.moveCamera(cu);
+        googleMap.setOnMapLoadedCallback(() -> {
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            builder.include(hanoiLocations);
+            LatLngBounds bounds = builder.build();
+            int padding = 100;
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+            googleMap.moveCamera(cu);
+        });
 
         addWeatherOverlay();
     }
-
     private void addWeatherOverlay() {
 
         List<LatLng> latLngList = new ArrayList<>();
@@ -98,4 +108,11 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
 
         TileOverlay tileOverlay = googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
     }
+
+    private boolean isGooglePlayServicesAvailable() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(requireContext());
+        return resultCode == ConnectionResult.SUCCESS;
+    }
+
 }
