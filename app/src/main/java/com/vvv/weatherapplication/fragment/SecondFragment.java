@@ -168,6 +168,8 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
                     if (location != null) {
                         LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 10f));
+
+                        googleMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
                     } else {
                         Toast.makeText(requireContext(), "Failed to get current location.", Toast.LENGTH_LONG).show();
                     }
