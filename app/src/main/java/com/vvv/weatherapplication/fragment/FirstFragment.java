@@ -1,6 +1,7 @@
 package com.vvv.weatherapplication.fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -26,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.textfield.TextInputEditText;
@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class FirstFragment extends Fragment {
 
@@ -58,15 +59,13 @@ public class FirstFragment extends Fragment {
     private ProgressBar loading;
     private TextView cityText, tempText, conditionText;
     private TextInputEditText cityEditText;
-    private ImageView backImage, iconImage, searchImageIC;
-    private RecyclerView weatherRv1, weatherRv2, weatherRv3;
+    private ImageView iconImage;
     private ArrayList<WeatherModel1> weatherModel1ArrayList1;
     private ArrayList<WeatherModel2> weatherModelArrayList2;
     private ArrayList<WeatherModel3> weatherModelArrayList3;
     private WeatherAdapter1 weatherAdapter1;
     private WeatherAdapter2 weatherAdapter2;
     private WeatherAdapter3 weatherAdapter3;
-    private LocationManager locationManager;
 
     public FirstFragment() {
     }
@@ -81,13 +80,13 @@ public class FirstFragment extends Fragment {
         cityText = view.findViewById(R.id.IdTvCityName);
         tempText = view.findViewById(R.id.IdTvTempearture);
         conditionText = view.findViewById(R.id.IDtVCondition);
-        weatherRv1 = view.findViewById(R.id.Idrvweather1);
-        weatherRv2 = view.findViewById(R.id.Idrvweather2);
-        weatherRv3 = view.findViewById(R.id.Idrvweather3);
+        RecyclerView weatherRv1 = view.findViewById(R.id.Idrvweather1);
+        RecyclerView weatherRv2 = view.findViewById(R.id.Idrvweather2);
+        RecyclerView weatherRv3 = view.findViewById(R.id.Idrvweather3);
         cityEditText = view.findViewById(R.id.Ideditcity);
-        backImage = view.findViewById(R.id.Idivback);
+        view.findViewById(R.id.Idivback);
         iconImage = view.findViewById(R.id.IdIvIcon);
-        searchImageIC = view.findViewById(R.id.IdIvSearch);
+        ImageView searchImageIC = view.findViewById(R.id.IdIvSearch);
 
         weatherModel1ArrayList1 = new ArrayList<>();
         weatherAdapter1 = new WeatherAdapter1(requireContext(), weatherModel1ArrayList1);
@@ -101,7 +100,7 @@ public class FirstFragment extends Fragment {
         weatherAdapter3 = new WeatherAdapter3(requireContext(), weatherModelArrayList3);
         weatherRv3.setAdapter(weatherAdapter3);
 
-        locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireContext(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -122,7 +121,7 @@ public class FirstFragment extends Fragment {
         searchImageIC.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String city = cityEditText.getText().toString();
+                String city = Objects.requireNonNull(cityEditText.getText()).toString();
                 if (city.isEmpty()) {
                     Toast.makeText(requireContext(), "Please Enter City Name", Toast.LENGTH_SHORT).show();
                 } else {
@@ -154,6 +153,7 @@ public class FirstFragment extends Fragment {
         try {
             List<Address> addresses = gcd.getFromLocation(latitude, longitude, 10);
 
+            assert addresses != null;
             for (Address adr : addresses) {
                 if (adr != null) {
                     String city = adr.getLocality();
@@ -178,6 +178,7 @@ public class FirstFragment extends Fragment {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url,
                 null, new Response.Listener<JSONObject>() {
+            @SuppressLint({"NotifyDataSetChanged", "SetTextI18n"})
             @Override
             public void onResponse(JSONObject response) {
                 loading.setVisibility(View.GONE);
@@ -194,21 +195,7 @@ public class FirstFragment extends Fragment {
                     String conditionIcon = response.getJSONObject("current").getJSONObject("condition").getString("icon");
                     Picasso.get().load("http:".concat(conditionIcon)).into(iconImage);
                     conditionText.setText(condition);
-//                    if (isDay == 1) {
-//                        backImage.setBackgroundResource(R.drawable.empty_drawable);
-//                    } else {
-//                        //backIV.setBackgroundResource(R.drawable.main_night_bg);
-//                        Drawable mainNightBgDrawable = getResources().getDrawable(R.drawable.main_night_bg);
-//
-//                        DisplayMetrics displayMetrics = new DisplayMetrics();
-//                        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-//                        int screenWidth = displayMetrics.widthPixels;
-//                        int screenHeight = displayMetrics.heightPixels;
-//
-//                        mainNightBgDrawable.setBounds(0, 0, screenWidth, screenHeight);
-//
-//                        backImage.setBackground(mainNightBgDrawable);
-//                    }
+
                     JSONObject forecastObj = response.getJSONObject("forecast");
                     JSONObject forcastO = forecastObj.getJSONArray("forecastday").getJSONObject(0);
                     JSONArray hourArray = forcastO.getJSONArray("hour");
@@ -232,12 +219,7 @@ public class FirstFragment extends Fragment {
                     throw new RuntimeException(e);
                 }
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(requireContext(), "Please enter valid city", Toast.LENGTH_SHORT).show();
-            }
-        });
+        }, error -> Toast.makeText(requireContext(), "Please enter valid city", Toast.LENGTH_SHORT).show());
         requestQueue.add(jsonObjectRequest);
     }
 }

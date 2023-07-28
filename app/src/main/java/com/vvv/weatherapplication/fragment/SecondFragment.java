@@ -1,6 +1,7 @@
 package com.vvv.weatherapplication.fragment;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,8 +26,9 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.gson.annotations.SerializedName;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.vvv.weatherapplication.R;
 
@@ -33,12 +36,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
+
 public class SecondFragment extends Fragment implements OnMapReadyCallback {
 
     private MapView mapView;
     private GoogleMap googleMap;
+
     public SecondFragment() {
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -48,28 +61,33 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
         mapView.getMapAsync(this);
         return view;
     }
+
     @Override
     public void onResume() {
         super.onResume();
         mapView.onResume();
     }
+
     @Override
     public void onPause() {
         super.onPause();
         mapView.onPause();
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
     }
+
     @Override
     public void onLowMemory() {
         super.onLowMemory();
         mapView.onLowMemory();
     }
+
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         this.googleMap = googleMap;
 
         if (!isGooglePlayServicesAvailable()) {
@@ -78,25 +96,9 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
         }
 
         requestCurrentLocation();
-//        LatLng hanoiLocation = new LatLng(21.0285, 105.8542);
-//        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(hanoiLocation, 10f));
-//
-//        LatLng hanoiLocations = new LatLng(21.0285, 105.8542);
-//        googleMap.addMarker(new MarkerOptions().position(hanoiLocations).title("Hanoi"));
+        //addWeatherOverlay();
 
-//        googleMap.setOnMapLoadedCallback(() -> {
-//            LatLngBounds.Builder builder = new LatLngBounds.Builder();
-////            builder.include(hanoiLocations);
-//            LatLngBounds bounds = builder.build();
-//            int padding = 100;
-//            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-//
-//            googleMap.moveCamera(cu);
-//        });
-
-        addWeatherOverlay();
-
-        EditText searchEditText = getView().findViewById(R.id.searchEditText);
+        EditText searchEditText = requireView().findViewById(R.id.searchEditText);
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 String locationName = searchEditText.getText().toString().trim();
@@ -110,7 +112,7 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
             return false;
         });
 
-        Button btnSearch = getView().findViewById(R.id.btnSearch);
+        Button btnSearch = requireView().findViewById(R.id.btnSearch);
         btnSearch.setOnClickListener(v -> {
             String locationName = searchEditText.getText().toString().trim();
             if (!locationName.isEmpty()) {
@@ -120,25 +122,12 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
             }
         });
     }
-    private void addWeatherOverlay() {
 
-        List<LatLng> latLngList = new ArrayList<>();
-        latLngList.add(new LatLng(37.7749, -122.4194));
-
-
-        HeatmapTileProvider heatmapTileProvider = new HeatmapTileProvider.Builder()
-                .data(latLngList)
-                .build();
-
-        TileOverlay tileOverlay = googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
-    }
-
-    private boolean isGooglePlayServicesAvailable() {
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        int resultCode = apiAvailability.isGooglePlayServicesAvailable(requireContext());
-        return resultCode == ConnectionResult.SUCCESS;
-    }
-
+    //    private boolean isGooglePlayServicesAvailable() {
+//        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+//        int resultCode = apiAvailability.isGooglePlayServicesAvailable(requireContext());
+//        return resultCode == ConnectionResult.SUCCESS;
+//    }
     private void searchLocation(String locationName) {
         Geocoder geocoder = new Geocoder(requireContext());
         try {
@@ -151,6 +140,7 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
 
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 10f));
                 googleMap.addMarker(new MarkerOptions().position(location).title(locationName));
+                addWeatherOverlay(latitude, longitude);
             } else {
                 Toast.makeText(requireContext(), "Location not found.", Toast.LENGTH_SHORT).show();
             }
@@ -170,6 +160,8 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 10f));
 
                         googleMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
+
+                        addWeatherOverlay(location.getLatitude(), location.getLongitude());
                     } else {
                         Toast.makeText(requireContext(), "Failed to get current location.", Toast.LENGTH_LONG).show();
                     }
@@ -179,4 +171,86 @@ public class SecondFragment extends Fragment implements OnMapReadyCallback {
                 });
     }
 
+    private void addWeatherOverlay(double latitude, double longitude) {
+        String WEATHER_API_KEY = "03dd97a21d0e43f6bd550527232905";
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.weatherapi.com/v1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        WeatherApiService weatherApiService = retrofit.create(WeatherApiService.class);
+        Call<WeatherResponse> call = weatherApiService.getWeather(WEATHER_API_KEY, latitude, longitude);
+        call.enqueue(new Callback<WeatherResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<WeatherResponse> call, @NonNull Response<WeatherResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    WeatherResponse weatherResponse = response.body();
+                    double temperature = weatherResponse.getTemperature();
+
+                    List<LatLng> latLngList = new ArrayList<>();
+                    latLngList.add(new LatLng(latitude, longitude));
+
+                    int[] colors = {
+                            Color.rgb(0, 0, 255),
+                            Color.rgb(0, 255, 0),
+                            Color.rgb(255, 255, 0),
+                            Color.rgb(255, 0, 0)
+                    };
+
+                    float[] temperatureThresholds = {0f, 10f, 20f, 30f};
+
+                    HeatmapTileProvider heatmapTileProvider = new HeatmapTileProvider.Builder()
+                            .data(latLngList)
+                            .gradient(new Gradient(colors, temperatureThresholds))
+                            .build();
+
+                    googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(heatmapTileProvider));
+
+                    LatLng location = new LatLng(latitude, longitude);
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 10f));
+                    googleMap.addMarker(new MarkerOptions().position(location).title("Temperature: " + temperature));
+                } else {
+                    Toast.makeText(requireContext(), "Failed to fetch weather data.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<WeatherResponse> call, @NonNull Throwable t) {
+                Toast.makeText(requireContext(), "Failed to fetch weather data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private boolean isGooglePlayServicesAvailable() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(requireContext());
+        return resultCode == ConnectionResult.SUCCESS;
+    }
+
+    public interface WeatherApiService {
+        @GET("current.json")
+        Call<WeatherResponse> getWeather(@Query("key") String apiKey, @Query("q") double latitude, @Query("q") double longitude);
+    }
+
+    public static class WeatherResponse {
+        @SerializedName("current")
+        private CurrentWeather currentWeather;
+
+        public WeatherResponse(CurrentWeather currentWeather) {
+            this.currentWeather = currentWeather;
+        }
+
+        public double getTemperature() {
+            return currentWeather.getTemperature();
+        }
+
+        private static class CurrentWeather {
+            @SerializedName("temp_c")
+            private double temperature;
+
+            public double getTemperature() {
+                return temperature;
+            }
+        }
+    }
 }

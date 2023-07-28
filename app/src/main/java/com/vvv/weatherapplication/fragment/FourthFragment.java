@@ -14,8 +14,6 @@ import com.vvv.weatherapplication.R;
 
 public class FourthFragment extends Fragment {
 
-    private ImageView tg, z, fb, ms;
-
     public FourthFragment() {
     }
 
@@ -24,10 +22,10 @@ public class FourthFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_fourth, container, false);
 
-        tg = view.findViewById(R.id.tg);
-        z = view.findViewById(R.id.z);
-        fb = view.findViewById(R.id.fb);
-        ms = view.findViewById(R.id.ms);
+        ImageView tg = view.findViewById(R.id.tg);
+        ImageView z = view.findViewById(R.id.z);
+        ImageView fb = view.findViewById(R.id.fb);
+        ImageView ms = view.findViewById(R.id.ms);
 
         tg.setOnClickListener(v -> openWebpage("https://www.telegram.com/"));
         z.setOnClickListener(v -> openWebpage("https://www.zalo.com/"));

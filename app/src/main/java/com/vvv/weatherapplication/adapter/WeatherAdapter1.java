@@ -1,5 +1,6 @@
 package com.vvv.weatherapplication.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,7 @@ public class WeatherAdapter1 extends RecyclerView.Adapter<WeatherAdapter1.ViewHo
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
@@ -43,10 +45,11 @@ public class WeatherAdapter1 extends RecyclerView.Adapter<WeatherAdapter1.ViewHo
         Picasso.get().load("http:".concat(model.getIcon())).into(holder.contitionTV);
         Picasso.get().load("http:".concat(model.getIcon())).into(holder.conditionTop);
         holder.windTV.setText(model.getWindSpeed() + "km/h");
-        SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        SimpleDateFormat output = new SimpleDateFormat("hh:mm aa");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat output = new SimpleDateFormat("hh:mm aa");
         try {
             Date t = input.parse(model.getTime());
+            assert t != null;
             holder.timeTV.setText(output.format(t));
         } catch (ParseException e) {
             e.printStackTrace();
@@ -59,7 +62,7 @@ public class WeatherAdapter1 extends RecyclerView.Adapter<WeatherAdapter1.ViewHo
         return weatherModel1ArrayList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView windTV;
         private final TextView temperatureTV;
         private final TextView timeTV;

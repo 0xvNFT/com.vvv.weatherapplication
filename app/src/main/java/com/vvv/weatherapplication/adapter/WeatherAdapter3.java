@@ -1,5 +1,6 @@
 package com.vvv.weatherapplication.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +36,7 @@ public class WeatherAdapter3 extends RecyclerView.Adapter<WeatherAdapter3.ViewHo
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
@@ -43,10 +45,11 @@ public class WeatherAdapter3 extends RecyclerView.Adapter<WeatherAdapter3.ViewHo
         Picasso.get().load("http:".concat(model.getIcon())).into(holder.contitionTV);
         //Picasso.get().load("http:".concat(model.getIcon())).into(holder.conditionTop);
         //holder.windTV.setText(model.getWindSpeed() + "km/h");
-        SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        SimpleDateFormat output = new SimpleDateFormat("hh:mm aa");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat output = new SimpleDateFormat("hh:mm aa");
         try {
             Date t = input.parse(model.getTime());
+            assert t != null;
             holder.timeTV.setText(output.format(t));
         } catch (ParseException e) {
             e.printStackTrace();
@@ -59,20 +62,16 @@ public class WeatherAdapter3 extends RecyclerView.Adapter<WeatherAdapter3.ViewHo
         return weatherRvModelArrayList3.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView windTV;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView temperatureTV;
         private final TextView timeTV;
         private final ImageView contitionTV;
-        private ImageView conditionTop;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            //windTV = itemView.findViewById(R.id.IdTvWindspeed);
             temperatureTV = itemView.findViewById(R.id.IdTvTempearture);
             timeTV = itemView.findViewById(R.id.IdTvTime);
             contitionTV = itemView.findViewById(R.id.IDtVCondition);
-            //conditionTop = itemView.findViewById(R.id.IDtVConditionTop);
         }
     }
 }

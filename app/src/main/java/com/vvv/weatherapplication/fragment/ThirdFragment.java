@@ -1,6 +1,7 @@
 package com.vvv.weatherapplication.fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -25,7 +26,6 @@ import androidx.fragment.app.Fragment;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.textfield.TextInputEditText;
@@ -39,6 +39,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class ThirdFragment extends Fragment {
 
@@ -50,8 +51,7 @@ public class ThirdFragment extends Fragment {
     private ProgressBar loadingPB;
     private TextView cityNameTV, temperatureTV, conditionTv;
     private TextInputEditText cityEDT;
-    private ImageView backIV, iconIV, searchIV;
-    private LocationManager locationManager;
+    private ImageView iconIV;
 
     public ThirdFragment() {
     }
@@ -68,12 +68,12 @@ public class ThirdFragment extends Fragment {
         conditionTv = view.findViewById(R.id.IDtVCondition);
 
         cityEDT = view.findViewById(R.id.Ideditcity);
-        backIV = view.findViewById(R.id.Idivback);
+        view.findViewById(R.id.Idivback);
         iconIV = view.findViewById(R.id.IdIvIcon);
-        searchIV = view.findViewById(R.id.IdIvSearch);
+        ImageView searchIV = view.findViewById(R.id.IdIvSearch);
 
 
-        locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireContext(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -91,16 +91,13 @@ public class ThirdFragment extends Fragment {
             getWeatherInfo(cityName);
         }
 
-        searchIV.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String city = cityEDT.getText().toString();
-                if (city.isEmpty()) {
-                    Toast.makeText(requireContext(), "Please Enter City Name", Toast.LENGTH_SHORT).show();
-                } else {
-                    cityNameTV.setText(cityName);
-                    getWeatherInfo(city);
-                }
+        searchIV.setOnClickListener(view1 -> {
+            String city = Objects.requireNonNull(cityEDT.getText()).toString();
+            if (city.isEmpty()) {
+                Toast.makeText(requireContext(), "Please Enter City Name", Toast.LENGTH_SHORT).show();
+            } else {
+                cityNameTV.setText(cityName);
+                getWeatherInfo(city);
             }
         });
 
@@ -126,6 +123,7 @@ public class ThirdFragment extends Fragment {
         try {
             List<Address> addresses = gcd.getFromLocation(latitude, longitude, 10);
 
+            assert addresses != null;
             for (Address adr : addresses) {
                 if (adr != null) {
                     String city = adr.getLocality();
@@ -150,6 +148,7 @@ public class ThirdFragment extends Fragment {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url,
                 null, new Response.Listener<JSONObject>() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onResponse(JSONObject response) {
                 loadingPB.setVisibility(View.GONE);
@@ -184,10 +183,10 @@ public class ThirdFragment extends Fragment {
 
                     for (int i = 0; i < hourArray.length(); i++) {
                         JSONObject hourObj = hourArray.getJSONObject(i);
-                        String time = hourObj.getString("time");
-                        String temper = hourObj.getString("temp_c");
-                        String img = hourObj.getJSONObject("condition").getString("icon");
-                        String wind = hourObj.getString("wind_kph");
+                        hourObj.getString("time");
+                        hourObj.getString("temp_c");
+                        hourObj.getJSONObject("condition").getString("icon");
+                        hourObj.getString("wind_kph");
 
                     }
 
@@ -195,12 +194,7 @@ public class ThirdFragment extends Fragment {
                     throw new RuntimeException(e);
                 }
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(requireContext(), "Please enter valid city", Toast.LENGTH_SHORT).show();
-            }
-        });
+        }, error -> Toast.makeText(requireContext(), "Please enter valid city", Toast.LENGTH_SHORT).show());
         requestQueue.add(jsonObjectRequest);
     }
 }
